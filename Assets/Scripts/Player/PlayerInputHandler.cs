@@ -13,15 +13,6 @@ public class PlayerInputHandler : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha6)) InventoryManager.Instance.SelectSlot(5);
         if (Input.GetKeyDown(KeyCode.Alpha7)) InventoryManager.Instance.SelectSlot(6);
 
-        // Цифры на Numpad тоже работают
-        if (Input.GetKeyDown(KeyCode.Keypad1)) InventoryManager.Instance.SelectSlot(0);
-        if (Input.GetKeyDown(KeyCode.Keypad2)) InventoryManager.Instance.SelectSlot(1);
-        if (Input.GetKeyDown(KeyCode.Keypad3)) InventoryManager.Instance.SelectSlot(2);
-        if (Input.GetKeyDown(KeyCode.Keypad4)) InventoryManager.Instance.SelectSlot(3);
-        if (Input.GetKeyDown(KeyCode.Keypad5)) InventoryManager.Instance.SelectSlot(4);
-        if (Input.GetKeyDown(KeyCode.Keypad6)) InventoryManager.Instance.SelectSlot(5);
-        if (Input.GetKeyDown(KeyCode.Keypad7)) InventoryManager.Instance.SelectSlot(6);
-
         if (Input.GetKeyDown(KeyCode.E))
         {
             InventoryManager.Instance.UseItem();

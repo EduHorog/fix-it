@@ -1,36 +1,101 @@
 using UnityEngine;
 
+[RequireComponent(typeof(SpriteRenderer))]
 public class PickupItem2D : MonoBehaviour
 {
+    [Header("Item Data")]
     public ItemData itemData;
-    public float rotationSpeed = 50f;
-    public float floatSpeed = 1f;
-    public float floatHeight = 0.3f;
+
+    [Header("Animation Settings")]
+    public float rotationSpeed = 50f;   // Скорость вращения вокруг Z
+    public float floatSpeed = 1f;       // Скорость покачивания
+    public float floatHeight = 0.3f;    // Амплитуда покачивания
+
+    [Header("Visual References")]
+    [SerializeField] private SpriteRenderer spriteRenderer;
 
     private Vector3 startPos;
+    private bool isInitialized = false;
+
+    private void Awake()
+    {
+        // Автопоиск SpriteRenderer, если не назначен
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
+    }
 
     private void Start()
     {
+        Initialize();
+    }
+
+    private void OnValidate()
+    {
+        // Обновление визуала в редакторе при изменении itemData
+        if (!Application.isPlaying)
+        {
+            if (spriteRenderer == null)
+                spriteRenderer = GetComponent<SpriteRenderer>();
+            
+            ApplyItemVisuals();
+        }
+    }
+
+    private void Initialize()
+    {
+        if (isInitialized) return;
+        
         startPos = transform.position;
+        ApplyItemVisuals();
+        isInitialized = true;
     }
 
     private void Update()
     {
-        // Вращение в 2D (вокруг Z)
-        transform.Rotate(0, 0, rotationSpeed * Time.deltaTime);
+        if (!isInitialized) return;
+
+        // Вращение в 2D (вокруг оси Z)
+        transform.Rotate(0f, 0f, rotationSpeed * Time.deltaTime);
         
-        // Покачивание вверх-вниз
-        transform.position = startPos + Vector3.up * Mathf.Sin(Time.time * floatSpeed) * floatHeight;
+        // Плавное покачивание вверх-вниз
+        float yOffset = Mathf.Sin(Time.time * floatSpeed) * floatHeight;
+        transform.position = startPos + Vector3.up * yOffset;
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    /// <summary>
+    /// Применяет визуальные настройки из ItemData к спрайту
+    /// </summary>
+    public void ApplyItemVisuals()
     {
-        if (other.CompareTag("Player"))
+        if (itemData == null || spriteRenderer == null) 
+            return;
+
+        // Применяем иконку предмета
+        if (itemData.icon != null)
         {
-            if (InventoryManager.Instance.AddItem(itemData))
-            {
-                Destroy(gameObject);
-            }
+            spriteRenderer.sprite = itemData.icon;
         }
+
+        // Опционально: дополнительные визуальные настройки
+        // spriteRenderer.color = itemData.tintColor;
+        // transform.localScale = Vector3.one * itemData.displayScale;
+    }
+
+    /// <summary>
+    /// Динамическая смена предмета (если префаб переиспользуется)
+    /// </summary>
+    public void SetItemData(ItemData newData)
+    {
+        itemData = newData;
+        ApplyItemVisuals();
+    }
+
+    /// <summary>
+    /// Сброс позиции при повторном использовании (для объектного пула)
+    /// </summary>
+    public void ResetPosition(Vector3 newPosition)
+    {
+        startPos = newPosition;
+        transform.position = newPosition;
     }
 }

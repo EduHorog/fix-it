@@ -1,13 +1,16 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using TMPro; // ← Обязательно для TMP
 
 public class TooltipController : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Tooltip UI")]
     public GameObject tooltipPanel;
-    public Text nameText;
-    public Text descText;
+    public TextMeshProUGUI nameText;  // ← Изменено на TextMeshProUGUI
+    public TextMeshProUGUI descText;  // ← Изменено на TextMeshProUGUI
+
+    [Header("Tooltip Offset")]
+    public Vector2 offset = new Vector2(0, 40); // ← Сдвиг: X=вправо/влево, Y=вверх/вниз от курсора
 
     private RectTransform tooltipRect;
     private Canvas canvas;
@@ -33,16 +36,13 @@ public class TooltipController : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        // Проверяем что pointerEnter не null
         if (eventData.pointerEnter == null)
             return;
 
-        // Ищем HotbarSlotUI в родителях
         var slotUI = eventData.pointerEnter.GetComponentInParent<HotbarSlotUI>();
         if (slotUI == null)
             return;
 
-        // Проверяем менеджер
         if (InventoryManager.Instance == null)
         {
             Debug.LogError("InventoryManager.Instance is null!");
@@ -51,7 +51,6 @@ public class TooltipController : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
         int slotIndex = slotUI.slotIndex;
         
-        // Проверяем границы массива
         if (slotIndex < 0 || slotIndex >= InventoryManager.Instance.slots.Length)
             return;
 
@@ -59,7 +58,6 @@ public class TooltipController : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
         if (item != null)
         {
-            // Проверяем тексты
             if (nameText != null)
                 nameText.text = item.itemName;
             
@@ -79,22 +77,42 @@ public class TooltipController : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
     private void LateUpdate()
     {
-        if (tooltipPanel != null && tooltipPanel.activeSelf)
+        if (tooltipPanel != null && tooltipPanel.activeSelf && tooltipRect != null && canvas != null)
         {
             Vector2 mousePos = Input.mousePosition;
             
-            if (canvas != null)
-            {
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    canvas.GetComponent<RectTransform>(),
-                    mousePos,
-                    canvas.worldCamera,
-                    out Vector2 localPoint
-                );
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvas.GetComponent<RectTransform>(),
+                mousePos,
+                canvas.worldCamera,
+                out Vector2 localPoint
+            );
 
-                if (tooltipRect != null)
-                    tooltipRect.anchoredPosition = localPoint + new Vector2(20, -30);
-            }
+            // ← Позиционируем тултип НАД курсором (положительный Y = вверх)
+            tooltipRect.anchoredPosition = localPoint + offset;
+            
+            // Опционально: предотвращаем выход за границы экрана
+            ClampTooltipToScreen();
         }
+    }
+
+    // Опциональный метод: чтобы тултип не уходил за край экрана
+    private void ClampTooltipToScreen()
+    {
+        if (canvas == null || tooltipRect == null) return;
+
+        Vector2 canvasSize = (canvas.GetComponent<RectTransform>() as RectTransform).sizeDelta;
+        Vector2 tooltipSize = tooltipRect.sizeDelta;
+        Vector2 pos = tooltipRect.anchoredPosition;
+
+        // Ограничиваем по горизонтали
+        float halfWidth = tooltipSize.x / 2;
+        pos.x = Mathf.Clamp(pos.x, -canvasSize.x / 2 + halfWidth, canvasSize.x / 2 - halfWidth);
+
+        // Ограничиваем по вертикали (особенно важно сверху)
+        float halfHeight = tooltipSize.y / 2;
+        pos.y = Mathf.Clamp(pos.y, -canvasSize.y / 2 + halfHeight, canvasSize.y / 2 - halfHeight);
+
+        tooltipRect.anchoredPosition = pos;
     }
 }
