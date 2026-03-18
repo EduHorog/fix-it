@@ -18,6 +18,10 @@ public class InteractionChoice
     public AudioClip successSound;
     public ParticleSystem successEffect;
 
+    [Header("Спец. события")]
+    public MirrorShadowEvent shadowEvent; // Ссылка на компонент на сцене
+    public bool triggerShadow = false;    // Флаг: запускать ли событие тени
+
     // ✅ Безопасная проверка инвентаря
     public bool IsItemInInventory => 
         InventoryManager.Instance != null && 
