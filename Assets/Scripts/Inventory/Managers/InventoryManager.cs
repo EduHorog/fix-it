@@ -88,4 +88,39 @@ public class InventoryManager : MonoBehaviour
         selectedSlotIndex = index;
         OnSlotSelected?.Invoke(index);
     }
+
+    // Добавь в класс InventoryManager:
+
+    /// <summary>
+    /// Проверяет, есть ли у игрока хотя бы один экземпляр предмета
+    /// </summary>
+    public bool HasItem(ItemData item)
+    {
+        if (item == null) return false;
+        
+        foreach (var slot in slots)
+        {
+            if (slot.item == item) return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Удаляет один экземпляр предмета из инвентаря
+    /// </summary>
+    public bool RemoveOneItem(ItemData item)
+    {
+        if (item == null) return false;
+        
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i].item == item)
+            {
+                slots[i].item = null;
+                OnInventoryChanged?.Invoke();
+                return true;
+            }
+        }
+        return false;
+    }
 }

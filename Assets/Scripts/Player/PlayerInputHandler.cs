@@ -13,10 +13,7 @@ public class PlayerInputHandler : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha6)) InventoryManager.Instance.SelectSlot(5);
         if (Input.GetKeyDown(KeyCode.Alpha7)) InventoryManager.Instance.SelectSlot(6);
 
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            InventoryManager.Instance.UseItem();
-        }
+        
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
