@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Item_Hammer
   m_EditorClassIdentifier: Assembly-CSharp::Item
   itemName: "\u041C\u043E\u043B\u043E\u0442\u043E\u043A"
-  icon: {fileID: 9215100820007977992, guid: 11af263f29751ad47b2d491da539ac43, type: 3}
   description: "\u041F\u0440\u043E\u0441\u0442\u043E\u0439 \u043C\u043E\u043B\u043E\u0442\u043E\u043A"
-  maxStack: 1
+  inventoryIcon: {fileID: -1550469694, guid: c7a3075496f13094a82165f99976aa30, type: 3}
+  worldSprite: {fileID: 634775752, guid: c7a3075496f13094a82165f99976aa30, type: 3}
+  maxStackSize: 1
+  isUsable: 1

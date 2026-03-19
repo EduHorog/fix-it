@@ -70,15 +70,16 @@ public class PickupItem2D : MonoBehaviour
         if (itemData == null || spriteRenderer == null) 
             return;
 
-        // Применяем иконку предмета
-        if (itemData.icon != null)
+        // ✅ Используем спрайт для мира!
+        if (itemData.worldSprite != null)
         {
-            spriteRenderer.sprite = itemData.icon;
+            spriteRenderer.sprite = itemData.worldSprite;
         }
-
-        // Опционально: дополнительные визуальные настройки
-        // spriteRenderer.color = itemData.tintColor;
-        // transform.localScale = Vector3.one * itemData.displayScale;
+        // Fallback: если worldSprite не задан, берём иконку (на всякий случай)
+        else if (itemData.inventoryIcon != null)
+        {
+            spriteRenderer.sprite = itemData.inventoryIcon;
+        }
     }
 
     /// <summary>

@@ -47,7 +47,8 @@ public class HotbarSlotUI : MonoBehaviour
         {
             if (iconImage != null)
             {
-                iconImage.sprite = slotData.item.icon;
+                // ✅ Используем спрайт для интерфейса!
+                iconImage.sprite = slotData.item.inventoryIcon;
                 iconImage.color = Color.white;
             }
             if (quantityText != null)
