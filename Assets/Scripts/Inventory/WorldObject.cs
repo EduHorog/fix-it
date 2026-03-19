@@ -1,116 +1,148 @@
+using UnityEngine;
+using UnityEngine.Events;
+using System.Collections.Generic;
 
-// using UnityEngine;
-// using System.Collections.Generic;
-// using UnityEngine.Events;
+public class WorldObject : MonoBehaviour {
+    public string objectName;
+    public bool isResolved = false;
+    
+    public enum ObjectMode { Pickup, Place, UseItem }
+    public ObjectMode mode = ObjectMode.UseItem;
+    
+    [Header("Items")]
+    public Item itemToGive;      // Какой предмет дать (Pickup)
+    public Item itemToTake;      // Какой предмет забрать (Place)
+    public Item requiredItem;    // Нужен ли предмет для авто-крафта (Pickup)
+    
+    [Header("Use Item Mode")]
+    public List<ItemAction> itemActions = new List<ItemAction>();
+    
+    [System.Serializable]
+    public class ItemAction {
+        public Item requiredItem;
+        public int echoChange;
+        public Sprite resultSprite;
+        public UnityEvent onAction;
+        [TextArea] public string successMessage;
+        [TextArea] public string failMessage;
+    }
+    
+    [Header("Echo")]
+    public int echoOnPickup = 0;
+    public int echoOnHide = -5;
+    public int echoOnPlace = 8;
+    
+    [Header("Visuals")]
+    public SpriteRenderer spriteRenderer;
+    public Sprite filledSprite;
 
-// public class WorldObject : MonoBehaviour
-// {
-//     [Header("Info")]
-//     public string objectName;
-//     public string interactionPrompt = "Нажмите [E] для взаимодействия";
-    
-//     [Header("Item Actions")]
-//     [SerializeField] private List<ItemInteraction> interactions = new();
-    
-//     [Header("Visuals")]
-//     [SerializeField] private SpriteRenderer spriteRenderer;
-//     [SerializeField] private Sprite defaultSprite;
-//     [SerializeField] private Sprite[] resultSprites; // 0 = bad, 1 = good
-    
-//     [Header("Echo")]
-//     [SerializeField] private int echoOnSuccess = 5;
-//     [SerializeField] private int echoOnFail = -3;
-    
-//     private bool isInteracted = false;
-//     private bool isPlayerNearby = false;
-    
-//     [System.Serializable]
-//     public class ItemInteraction
-//     {
-//         public Item requiredItem;
-//         public InteractionResult result;
-//         public string successMessage;
-//         public string failMessage;
-//         public UnityEvent<int> onEchoChange; // кастомное событие для изменения эха
-//     }
-    
-//     public enum InteractionResult { Break, Fix, Nothing }
+    // Вызывается при клике мышкой по объекту
+    void OnMouseDown() {
+        if (mode == ObjectMode.Pickup) {
+            HandlePickup();
+        } else if (mode == ObjectMode.Place) {
+            HandlePlace();
+        } else if (mode == ObjectMode.UseItem) {
+            ShowItemSelection();
+        }
+    }
 
-//     private void Update()
-//     {
-//         if (isPlayerNearby && !isInteracted && Input.GetKeyDown(KeyCode.E))
-//         {
-//             TryInteract();
-//         }
+    // Вызывается при перетаскивании предмета из инвентаря
+    public bool TryUseItem(Item item) {
+        if (mode != ObjectMode.UseItem) return false;
         
-//         // Показываем подсказку при приближении
-//         if (isPlayerNearby && !isInteracted)
-//             UIManager.Instance?.ShowNotification(interactionPrompt);
-//     }
+        foreach (var action in itemActions) {
+            if (action.requiredItem == item) {
+                ExecuteAction(action);
+                return true;
+            }
+        }
+        
+        UIManager.Instance.ShowNotification("Этот предмет не подойдет");
+        return false;
+    }
 
-//     private void OnTriggerEnter2D(Collider2D other)
-//     {
-//         if (other.CompareTag("Player")) isPlayerNearby = true;
-//     }
+    void ExecuteAction(ItemAction action) {
+        if (isResolved) {
+            UIManager.Instance.ShowNotification("Уже обработано");
+            return;
+        }
+        
+        isResolved = true;
+        
+        if (spriteRenderer != null && action.resultSprite != null) {
+            spriteRenderer.sprite = action.resultSprite;
+        }
+        
+        EchoManager.Instance.AddEcho(action.echoChange);
+        action.onAction?.Invoke();
+        
+        string message = action.echoChange > 0 ? 
+            $"{action.successMessage} (+Эхо)" : 
+            $"{action.failMessage} (-Эхо)";
+        UIManager.Instance.ShowNotification(message);
+    }
 
-//     private void OnTriggerExit2D(Collider2D other)
-//     {
-//         if (other.CompareTag("Player")) isPlayerNearby = false;
-//     }
+    void ShowItemSelection() {
+        string msg = "Нужен предмет:\n";
+        foreach (var action in itemActions) {
+            bool hasItem = InventoryManager.Instance.HasItem(action.requiredItem.name);
+            msg += hasItem ? "✅ " : "❌ ";
+            msg += action.requiredItem.itemName + "\n";
+        }
+        UIManager.Instance.ShowNotification(msg);
+    }
 
-//     private void TryInteract()
-//     {
-//         foreach (var interaction in interactions)
-//         {
-//             if (InventoryManager.Instance.TryUseItem(interaction.requiredItem.name))
-//             {
-//                 ExecuteInteraction(interaction);
-//                 return;
-//             }
-//         }
-        
-//         // Если ни один предмет не подошёл
-//         UIManager.Instance.ShowNotification("Этот предмет не подходит");
-//     }
+    void HandlePickup() {
+        if (isResolved) {
+            UIManager.Instance.ShowNotification("Здесь пусто.");
+            return;
+        }
 
-//     private void ExecuteInteraction(ItemInteraction interaction)
-//     {
-//         isInteracted = true;
+        // Проверяем, есть ли предмет для крафта (например, иголка)
+        bool hasRequiredItem = requiredItem != null && 
+                               InventoryManager.Instance.HasItem(requiredItem.name);
         
-//         // Меняем спрайт
-//         if (spriteRenderer != null)
-//         {
-//             spriteRenderer.sprite = interaction.result == InteractionResult.Fix 
-//                 ? resultSprites[1] 
-//                 : interaction.result == InteractionResult.Break 
-//                     ? resultSprites[0] 
-//                     : defaultSprite;
-//         }
-        
-//         // Удаляем предмет из инвентаря (опционально)
-//         // InventoryManager.Instance.RemoveItem(interaction.requiredItem.name);
-        
-//         // Эхо + уведомление
-//         int echoChange = interaction.result == InteractionResult.Fix ? echoOnSuccess : 
-//                         interaction.result == InteractionResult.Break ? echoOnFail : 0;
-        
-//         EchoManager.Instance?.AddEcho(echoChange);
-        
-//         string message = interaction.result == InteractionResult.Fix ? interaction.successMessage :
-//                         interaction.result == InteractionResult.Break ? interaction.failMessage :
-//                         "Ничего не произошло";
-        
-//         if (echoChange != 0) 
-//             message += $" ({(echoChange > 0 ? "+" : "")}{echoChange} Эхо)";
-            
-//         UIManager.Instance.ShowNotification(message);
-//     }
-    
-//     // === Для отладки: добавить взаимодействие через инспектор ===
-//     #if UNITY_EDITOR
-//     private void OnValidate()
-//     {
-//         if (interactions == null) interactions = new();
-//     }
-//     #endif
-// }
+        if (hasRequiredItem) {
+            // ЕСТЬ иголка → даем починенную игрушку
+            if (itemToGive != null) {
+                // Ищем предмет для выдачи (починенный)
+                Item giveItem = Resources.Load<Item>("Items/" + itemToGive.name);
+                if (giveItem == null) giveItem = itemToGive;
+
+                if (InventoryManager.Instance.AddItem(giveItem)) {
+                    isResolved = true;
+                    if (spriteRenderer != null) spriteRenderer.enabled = false;
+                    EchoManager.Instance.AddEcho(echoOnPickup);
+                    UIManager.Instance.ShowNotification($"Вы забрали: {giveItem.itemName}");
+                }
+            }
+        } else {
+            // НЕТ иголки → просто прячем (автоматически, без выбора)
+            isResolved = true;
+            if (spriteRenderer != null) spriteRenderer.enabled = false;
+            EchoManager.Instance.AddEcho(echoOnHide);
+            UIManager.Instance.ShowNotification("Вы спрятали игрушку в шкаф (-Эхо)");
+        }
+    }
+
+    void HandlePlace() {
+        if (isResolved) {
+            UIManager.Instance.ShowNotification("Уже занято.");
+            return;
+        }
+
+        if (itemToTake != null) {
+            if (InventoryManager.Instance.HasItem(itemToTake.name)) {
+                InventoryManager.Instance.RemoveItemByName(itemToTake.name);
+                isResolved = true;
+                if (spriteRenderer != null && filledSprite != null)
+                    spriteRenderer.sprite = filledSprite;
+                EchoManager.Instance.AddEcho(echoOnPlace);
+                UIManager.Instance.ShowNotification("Вы поставили на место (+Эхо)");
+            } else {
+                UIManager.Instance.ShowNotification("У вас нет подходящего предмета");
+            }
+        }
+    }
+}
