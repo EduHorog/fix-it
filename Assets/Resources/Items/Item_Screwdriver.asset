@@ -9,20 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b97df6ae2e7fea843a3227e91828dfb2, type: 3}
+  m_Script: {fileID: 11500000, guid: 6029bd606c7f44a438faa4a102216fcc, type: 3}
   m_Name: Item_Screwdriver
   m_EditorClassIdentifier: Assembly-CSharp::Item
   itemName: "\u041E\u0442\u0432\u0435\u0440\u0442\u043A\u0430"
-<<<<<<< HEAD
   description: "\u041E\u0442\u0432\u0435\u0440\u0442\u043A\u0430 \u043A\u0440\u0435\u0441\u0442\u043E\u0432\u0430\u044F"
   inventoryIcon: {fileID: 249848910, guid: c7a3075496f13094a82165f99976aa30, type: 3}
   worldSprite: {fileID: -1210676330, guid: c7a3075496f13094a82165f99976aa30, type: 3}
   maxStackSize: 1
   isUsable: 1
-=======
-  icon: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  isQuestItem: 0
-  combineWith: []
-  resultItemID: 
-  description: "\u041A\u0440\u0435\u0441\u0442\u043E\u0432\u0430\u044F \u043E\u0442\u0432\u0435\u0440\u0442\u043A\u0430"
->>>>>>> 4388b24a150024e499d2933102d45cf3fa0ddb9a
